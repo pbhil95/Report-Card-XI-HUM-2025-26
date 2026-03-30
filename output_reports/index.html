@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report Cards Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        .header {
+            background: white; padding: 30px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 30px; text-align: center;
+        }
+        .header h1 { color: #2c3e50; font-size: 32px; margin-bottom: 10px; }
+        .header p  { color: #7f8c8d; font-size: 16px; }
+
+        .stats { display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .stat-box {
+            background: #3498db; color: white; padding: 12px 22px;
+            border-radius: 10px; font-size: 15px; font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-box.green  { background: #27ae60; }
+        .stat-box.red    { background: #e74c3c; }
+        .stat-box.orange { background: #e67e22; }
+        .stat-box.purple { background: #8e44ad; }
+
+        .controls {
+            background: white; padding: 15px 20px; border-radius: 10px;
+            margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+        }
+        .search-box {
+            flex: 1; min-width: 200px; padding: 10px 16px; font-size: 15px;
+            border: 2px solid #ddd; border-radius: 8px; outline: none;
+        }
+        .search-box:focus { border-color: #3498db; }
+
+        .sort-btn, .filter-btn {
+            padding: 10px 16px; border: 2px solid #ddd; border-radius: 8px;
+            background: white; cursor: pointer; font-size: 14px; transition: all 0.2s;
+        }
+        .sort-btn:hover, .filter-btn:hover  { border-color: #3498db; color: #3498db; }
+        .sort-btn.active  { background: #3498db; color: white; border-color: #3498db; }
+        .filter-btn.active-pass { background: #27ae60; color: white; border-color: #27ae60; }
+        .filter-btn.active-fail { background: #e74c3c; color: white; border-color: #e74c3c; }
+        .filter-btn.active-all  { background: #3498db; color: white; border-color: #3498db; }
+
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .student-card {
+            background: white; border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s; text-decoration: none; color: inherit;
+            display: flex; overflow: hidden;
+        }
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .student-card.hidden { display: none; }
+
+        .photo-thumb {
+            width: 90px; background: #f0f0f0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px; flex-shrink: 0; overflow: hidden;
+            border-right: 1px solid #eee;
+        }
+        .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .student-info-area { padding: 15px; flex: 1; }
+        .student-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .roll-no {
+            background: #3498db; color: white; width: 30px; height: 30px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 14px;
+        }
+        .student-name {
+            font-size: 16px; font-weight: bold; color: #2c3e50;
+            flex: 1; margin-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .student-meta { display: flex; flex-direction: column; gap: 5px; color: #7f8c8d; font-size: 13px; }
+        .meta-row { display: flex; justify-content: space-between; }
+        .marks  { font-weight: bold; color: #27ae60; }
+        .rank   { font-weight: bold; color: #e74c3c; }
+        .perc-badge {
+            background-color: #e8f5e9; color: #2e7d32;
+            padding: 2px 8px; border-radius: 4px; font-weight: bold;
+        }
+        .status-pass { color: green; font-weight: bold; }
+        .status-fail { color: red; font-weight: bold; }
+
+        .no-results {
+            grid-column: 1/-1; text-align: center; padding: 40px;
+            color: #7f8c8d; font-size: 18px; background: white;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>🎓 School Name</h1>
+        
+        <p>Complete Report Cards — Session 2025-26 | Class XI-HUMANITIES</p>
+        
+
+        <div class="stats">
+            <div class="stat-box">👨‍🎓 Students: 41</div>
+            <div class="stat-box green">✅ Pass: 41</div>
+            <div class="stat-box red">❌ NI: 0</div>
+            <div class="stat-box orange">📊 Avg: 66.6%</div>
+            <div class="stat-box purple">🏆 Top: 88.0%</div>
+            <div class="stat-box">📅 30-03-2026</div>
+        </div>
+        <a href="all_students_report.html" target="_blank"
+           style="display:block; margin-top:15px; text-decoration:none; color:#3498db; font-weight:bold;">
+           📄 View All Students Report (Combined)
+        </a>
+    </div>
+
+    <div class="controls">
+        <input type="text" class="search-box" id="searchInput"
+               placeholder="🔍 Search by name or roll number…" oninput="applyFilters()">
+
+        <button class="sort-btn" id="sortRank"  onclick="sortCards('rank')"  title="Sort by rank">🏆 Rank</button>
+        <button class="sort-btn" id="sortName"  onclick="sortCards('name')"  title="Sort by name">🔤 Name</button>
+        <button class="sort-btn" id="sortMarks" onclick="sortCards('marks')" title="Sort by marks">📊 Marks</button>
+
+        <button class="filter-btn" id="filterAll"  onclick="setFilter('all')"  title="Show all">All</button>
+        <button class="filter-btn" id="filterPass" onclick="setFilter('pass')" title="Show passed">✅ Pass</button>
+        <button class="filter-btn" id="filterFail" onclick="setFilter('fail')" title="Show needs improvement">❌ NI</button>
+    </div>
+
+    <div class="student-grid" id="studentGrid">
+        
+        <a href="Report_1_Ayush_Arya.html" class="student-card" target="_blank"
+           data-name="ayush arya"
+           data-roll="1"
+           data-rank="13"
+           data-marks="370"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/1.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">1</div>
+                    <div class="student-name">Ayush Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Nand Lal Arya</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">370/500</span></span>
+                        <span>Rank: <span class="rank">#13</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">74.00%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_2_Abhishek_Gurung.html" class="student-card" target="_blank"
+           data-name="abhishek gurung"
+           data-roll="2"
+           data-rank="39"
+           data-marks="247"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/2.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">2</div>
+                    <div class="student-name">Abhishek Gurung</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Santosh Gurung</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">247/500</span></span>
+                        <span>Rank: <span class="rank">#39</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">49.40%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_3_Ajay_Kumar.html" class="student-card" target="_blank"
+           data-name="ajay kumar"
+           data-roll="3"
+           data-rank="36"
+           data-marks="257"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/3.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">3</div>
+                    <div class="student-name">Ajay Kumar</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Chandan Ram</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">257/500</span></span>
+                        <span>Rank: <span class="rank">#36</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">51.40%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_4_Deeksha_Jeena.html" class="student-card" target="_blank"
+           data-name="deeksha jeena"
+           data-roll="4"
+           data-rank="3"
+           data-marks="432"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/4.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">4</div>
+                    <div class="student-name">Deeksha Jeena</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Chandan Singh Jeena</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">432/500</span></span>
+                        <span>Rank: <span class="rank">#3</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">86.40%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_5_Dikshit_Arya.html" class="student-card" target="_blank"
+           data-name="dikshit arya"
+           data-roll="5"
+           data-rank="28"
+           data-marks="304"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/5.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">5</div>
+                    <div class="student-name">Dikshit Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Om Prakash</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">304/500</span></span>
+                        <span>Rank: <span class="rank">#28</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">60.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_6_Deepika_Kumari.html" class="student-card" target="_blank"
+           data-name="deepika kumari"
+           data-roll="6"
+           data-rank="33"
+           data-marks="279"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/6.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">6</div>
+                    <div class="student-name">Deepika Kumari</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Lalit Kumar</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">279/500</span></span>
+                        <span>Rank: <span class="rank">#33</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">55.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_7_Dipika.html" class="student-card" target="_blank"
+           data-name="dipika"
+           data-roll="7"
+           data-rank="18"
+           data-marks="351"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/7.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">7</div>
+                    <div class="student-name">Dipika</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Sunil Singh Topal</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">351/500</span></span>
+                        <span>Rank: <span class="rank">#18</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">70.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_8_Dhruv_Tiwari.html" class="student-card" target="_blank"
+           data-name="dhruv tiwari"
+           data-roll="8"
+           data-rank="9"
+           data-marks="377"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/8.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">8</div>
+                    <div class="student-name">Dhruv Tiwari</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Shekhar Chandra Tiwari</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">377/500</span></span>
+                        <span>Rank: <span class="rank">#9</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">75.40%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_9_Divya_Arya.html" class="student-card" target="_blank"
+           data-name="divya arya"
+           data-roll="9"
+           data-rank="4"
+           data-marks="419"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/9.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">9</div>
+                    <div class="student-name">Divya Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Anand Prakash</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">419/500</span></span>
+                        <span>Rank: <span class="rank">#4</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">83.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_10_Gaurav_Khulbe.html" class="student-card" target="_blank"
+           data-name="gaurav khulbe"
+           data-roll="10"
+           data-rank="10"
+           data-marks="376"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/10.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">10</div>
+                    <div class="student-name">Gaurav Khulbe</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Bhuwan Chandra Kulbe</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">376/500</span></span>
+                        <span>Rank: <span class="rank">#10</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">75.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_11_Gaurav_Kumar.html" class="student-card" target="_blank"
+           data-name="gaurav kumar"
+           data-roll="11"
+           data-rank="14"
+           data-marks="367"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/11.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">11</div>
+                    <div class="student-name">Gaurav Kumar</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Bhuwan Chandra Arya</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">367/500</span></span>
+                        <span>Rank: <span class="rank">#14</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">73.40%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_12_Harshita_Maulkhi.html" class="student-card" target="_blank"
+           data-name="harshita maulkhi"
+           data-roll="12"
+           data-rank="22"
+           data-marks="329"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/12.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">12</div>
+                    <div class="student-name">Harshita Maulkhi</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Birendra Maulkhi</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">329/500</span></span>
+                        <span>Rank: <span class="rank">#22</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">65.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_13_Harshita_Negi.html" class="student-card" target="_blank"
+           data-name="harshita negi"
+           data-roll="13"
+           data-rank="12"
+           data-marks="373"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/13.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">13</div>
+                    <div class="student-name">Harshita Negi</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Rajendra Singh</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">373/500</span></span>
+                        <span>Rank: <span class="rank">#12</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">74.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_14_Hema.html" class="student-card" target="_blank"
+           data-name="hema"
+           data-roll="14"
+           data-rank="11"
+           data-marks="376"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/14.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">14</div>
+                    <div class="student-name">Hema</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Sher Singh</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">376/500</span></span>
+                        <span>Rank: <span class="rank">#11</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">75.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_15_Himani_Arya.html" class="student-card" target="_blank"
+           data-name="himani arya"
+           data-roll="15"
+           data-rank="5"
+           data-marks="405"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/15.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">15</div>
+                    <div class="student-name">Himani Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Prakash Lal</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">405/500</span></span>
+                        <span>Rank: <span class="rank">#5</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">81.00%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_16_Himanshu_Singh.html" class="student-card" target="_blank"
+           data-name="himanshu singh"
+           data-roll="16"
+           data-rank="23"
+           data-marks="321"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/16.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">16</div>
+                    <div class="student-name">Himanshu Singh</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Kundan Singh</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">321/500</span></span>
+                        <span>Rank: <span class="rank">#23</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">64.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_17_Hitika_Tiwari.html" class="student-card" target="_blank"
+           data-name="hitika tiwari"
+           data-roll="17"
+           data-rank="27"
+           data-marks="308"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/17.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">17</div>
+                    <div class="student-name">Hitika Tiwari</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Rajendra Tiwari</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">308/500</span></span>
+                        <span>Rank: <span class="rank">#27</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">61.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_18_Jaya_Arya.html" class="student-card" target="_blank"
+           data-name="jaya arya"
+           data-roll="18"
+           data-rank="15"
+           data-marks="364"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/18.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">18</div>
+                    <div class="student-name">Jaya Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Harish Chandra</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">364/500</span></span>
+                        <span>Rank: <span class="rank">#15</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">72.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_19_Kanika_Joshi.html" class="student-card" target="_blank"
+           data-name="kanika joshi"
+           data-roll="19"
+           data-rank="16"
+           data-marks="363"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/19.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">19</div>
+                    <div class="student-name">Kanika Joshi</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Chandra Shekher Joshi</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">363/500</span></span>
+                        <span>Rank: <span class="rank">#16</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">72.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_20_Lalit_Mohan.html" class="student-card" target="_blank"
+           data-name="lalit mohan"
+           data-roll="20"
+           data-rank="30"
+           data-marks="294"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/20.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">20</div>
+                    <div class="student-name">Lalit Mohan</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Dhani Ram</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">294/500</span></span>
+                        <span>Rank: <span class="rank">#30</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">58.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_21_Mahi.html" class="student-card" target="_blank"
+           data-name="mahi"
+           data-roll="21"
+           data-rank="32"
+           data-marks="283"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/21.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">21</div>
+                    <div class="student-name">Mahi</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Kunwar Singh</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">283/500</span></span>
+                        <span>Rank: <span class="rank">#32</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">56.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_22_Mahima_Arya.html" class="student-card" target="_blank"
+           data-name="mahima arya"
+           data-roll="22"
+           data-rank="2"
+           data-marks="434"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/22.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">22</div>
+                    <div class="student-name">Mahima Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Prakash Ram</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">434/500</span></span>
+                        <span>Rank: <span class="rank">#2</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">86.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_23_Manvi_Kohli.html" class="student-card" target="_blank"
+           data-name="manvi kohli"
+           data-roll="23"
+           data-rank="41"
+           data-marks="232"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/23.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">23</div>
+                    <div class="student-name">Manvi Kohli</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Vijay Kumar</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">232/500</span></span>
+                        <span>Rank: <span class="rank">#41</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">46.40%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_24_Mohit_Syalakoti.html" class="student-card" target="_blank"
+           data-name="mohit syalakoti"
+           data-roll="24"
+           data-rank="34"
+           data-marks="273"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/24.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">24</div>
+                    <div class="student-name">Mohit Syalakoti</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Anand Singh</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">273/500</span></span>
+                        <span>Rank: <span class="rank">#34</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">54.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_25_Muskan_Arya.html" class="student-card" target="_blank"
+           data-name="muskan arya"
+           data-roll="25"
+           data-rank="17"
+           data-marks="361"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/25.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">25</div>
+                    <div class="student-name">Muskan Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Ramesh Kumar</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">361/500</span></span>
+                        <span>Rank: <span class="rank">#17</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">72.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_26_Nikhil_Kumar.html" class="student-card" target="_blank"
+           data-name="nikhil kumar"
+           data-roll="26"
+           data-rank="26"
+           data-marks="309"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/26.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">26</div>
+                    <div class="student-name">Nikhil Kumar</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Pratap Ram</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">309/500</span></span>
+                        <span>Rank: <span class="rank">#26</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">61.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_27_Nirmala_Saijari.html" class="student-card" target="_blank"
+           data-name="nirmala saijari"
+           data-roll="27"
+           data-rank="24"
+           data-marks="315"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/27.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">27</div>
+                    <div class="student-name">Nirmala Saijari</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Virendra Singh Saijari</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">315/500</span></span>
+                        <span>Rank: <span class="rank">#24</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">63.00%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_28_Nitin_Mehra.html" class="student-card" target="_blank"
+           data-name="nitin mehra"
+           data-roll="28"
+           data-rank="20"
+           data-marks="331"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/28.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">28</div>
+                    <div class="student-name">Nitin Mehra</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Godhan Singh Mehra</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">331/500</span></span>
+                        <span>Rank: <span class="rank">#20</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">66.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_29_Pratigya.html" class="student-card" target="_blank"
+           data-name="pratigya"
+           data-roll="29"
+           data-rank="31"
+           data-marks="293"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/29.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">29</div>
+                    <div class="student-name">Pratigya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Ramesh Kumar</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">293/500</span></span>
+                        <span>Rank: <span class="rank">#31</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">58.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_30_Ragini_Kandwal.html" class="student-card" target="_blank"
+           data-name="ragini kandwal"
+           data-roll="30"
+           data-rank="25"
+           data-marks="314"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/30.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">30</div>
+                    <div class="student-name">Ragini Kandwal</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Mahendra Singh Kandwal</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">314/500</span></span>
+                        <span>Rank: <span class="rank">#25</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">62.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_31_Sachin_Giri.html" class="student-card" target="_blank"
+           data-name="sachin giri"
+           data-roll="31"
+           data-rank="29"
+           data-marks="301"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/31.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">31</div>
+                    <div class="student-name">Sachin Giri</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Balem Giri</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">301/500</span></span>
+                        <span>Rank: <span class="rank">#29</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">60.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_32_Sakshi_Rawat.html" class="student-card" target="_blank"
+           data-name="sakshi rawat"
+           data-roll="32"
+           data-rank="1"
+           data-marks="440"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/32.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">32</div>
+                    <div class="student-name">Sakshi Rawat</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Yogesh Chandra Rawat</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">440/500</span></span>
+                        <span>Rank: <span class="rank">#1</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">88.00%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_33_Sanjana_Ghughtyal.html" class="student-card" target="_blank"
+           data-name="sanjana ghughtyal"
+           data-roll="33"
+           data-rank="40"
+           data-marks="235"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/33.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">33</div>
+                    <div class="student-name">Sanjana Ghughtyal</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Dinesh Singh</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">235/500</span></span>
+                        <span>Rank: <span class="rank">#40</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">47.00%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_34_Shifa_Mansoori.html" class="student-card" target="_blank"
+           data-name="shifa mansoori"
+           data-roll="34"
+           data-rank="38"
+           data-marks="251"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/34.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">34</div>
+                    <div class="student-name">Shifa Mansoori</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Jakir Husain</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">251/500</span></span>
+                        <span>Rank: <span class="rank">#38</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">50.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_35_Shivam_Panwar.html" class="student-card" target="_blank"
+           data-name="shivam panwar"
+           data-roll="35"
+           data-rank="8"
+           data-marks="386"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/35.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">35</div>
+                    <div class="student-name">Shivam Panwar</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Devendra Singh Panwar</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">386/500</span></span>
+                        <span>Rank: <span class="rank">#8</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">77.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_36_Shiwani_Arya.html" class="student-card" target="_blank"
+           data-name="shiwani arya"
+           data-roll="36"
+           data-rank="21"
+           data-marks="331"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/36.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">36</div>
+                    <div class="student-name">Shiwani Arya</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Satish Kumar</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">331/500</span></span>
+                        <span>Rank: <span class="rank">#21</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">66.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_37_Shivraj_Singh_Ghughtyal.html" class="student-card" target="_blank"
+           data-name="shivraj singh ghughtyal"
+           data-roll="37"
+           data-rank="19"
+           data-marks="345"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/37.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">37</div>
+                    <div class="student-name">Shivraj Singh Ghughtyal</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Jodhan Singh Ghughtyal</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">345/500</span></span>
+                        <span>Rank: <span class="rank">#19</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">69.00%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_38_Tannu_Mathpal.html" class="student-card" target="_blank"
+           data-name="tannu mathpal"
+           data-roll="38"
+           data-rank="37"
+           data-marks="254"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/38.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">38</div>
+                    <div class="student-name">Tannu Mathpal</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Suresh Chandra Mathpal</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">254/500</span></span>
+                        <span>Rank: <span class="rank">#37</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">50.80%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_39_Vinita.html" class="student-card" target="_blank"
+           data-name="vinita"
+           data-roll="39"
+           data-rank="6"
+           data-marks="396"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/39.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">39</div>
+                    <div class="student-name">Vinita</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Prem Prakash</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">396/500</span></span>
+                        <span>Rank: <span class="rank">#6</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">79.20%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_40_Vivek_Prakash.html" class="student-card" target="_blank"
+           data-name="vivek prakash"
+           data-roll="40"
+           data-rank="35"
+           data-marks="263"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/40.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">40</div>
+                    <div class="student-name">Vivek Prakash</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Chandra Prakash</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">263/500</span></span>
+                        <span>Rank: <span class="rank">#35</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">52.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <a href="Report_41_Yug_Prakash.html" class="student-card" target="_blank"
+           data-name="yug prakash"
+           data-roll="41"
+           data-rank="7"
+           data-marks="388"
+           data-result="Pass">
+            <div class="photo-thumb">
+                
+                    <img src="../photos/41.jpg" alt="Photo">
+                
+            </div>
+            <div class="student-info-area">
+                <div class="student-header">
+                    <div class="roll-no">41</div>
+                    <div class="student-name">Yug Prakash</div>
+                </div>
+                <div class="student-meta">
+                    <div class="meta-row"><span>Father: Bharat Prakash</span></div>
+                    <div class="meta-row" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
+                        <span>Marks: <span class="marks">388/500</span></span>
+                        <span>Rank: <span class="rank">#7</span></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="perc-badge">77.60%</span>
+                        <span class="status-pass">
+                            Pass
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <div class="no-results" id="noResults" style="display:none;">No students match your search.</div>
+    </div>
+</div>
+
+<script>
+    let currentSort   = 'rank';
+    let currentFilter = 'all';
+
+    function sortCards(by) {
+        currentSort = by;
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('sort' + by.charAt(0).toUpperCase() + by.slice(1)).classList.add('active');
+
+        const grid  = document.getElementById('studentGrid');
+        const cards = [...grid.querySelectorAll('.student-card')];
+
+        cards.sort((a, b) => {
+            if (by === 'rank')  return parseInt(a.dataset.rank)  - parseInt(b.dataset.rank);
+            if (by === 'marks') return parseInt(b.dataset.marks) - parseInt(a.dataset.marks);
+            if (by === 'name')  return a.dataset.name.localeCompare(b.dataset.name);
+            return 0;
+        });
+
+        cards.forEach(c => grid.insertBefore(c, document.getElementById('noResults')));
+        applyFilters();
+    }
+
+    function setFilter(f) {
+        currentFilter = f;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active-all', 'active-pass', 'active-fail');
+        });
+        document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1))
+                .classList.add('active-' + f);
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const query  = document.getElementById('searchInput').value.toLowerCase();
+        const cards  = document.querySelectorAll('.student-card');
+        let   visible = 0;
+
+        cards.forEach(card => {
+            const nameMatch   = card.dataset.name.includes(query) || card.dataset.roll.includes(query);
+            const filterMatch = currentFilter === 'all' ||
+                                (currentFilter === 'pass' && card.dataset.result === 'Pass') ||
+                                (currentFilter === 'fail' && card.dataset.result !== 'Pass');
+            const show = nameMatch && filterMatch;
+            card.classList.toggle('hidden', !show);
+            if (show) visible++;
+        });
+
+        document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    document.getElementById('sortRank').classList.add('active');
+    document.getElementById('filterAll').classList.add('active-all');
+</script>
+</body>
+</html>
